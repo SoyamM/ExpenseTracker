@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #0b132b;
+            color: aliceblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .expense-tracker {
+            width: 100%;
+            max-width: 500px;
+            background-color: #1c2541;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .expense-tracker input,
+        .expense-tracker button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .expense-tracker button {
+            background-color: #3aafa9;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .expense-tracker button:hover {
+            transform: scale(1.05);
+            background-color: #2b7a78;
+        }
+
+        .expenses {
+            margin-top: 20px;
+        }
+
+        .expenses ul {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #3a3a66;
+            border-radius: 5px;
+        }
+
+        .expenses ul li {
+            margin-bottom: 10px;
+            background: #0b3d91;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .rings-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            gap: 20px;
+        }
+
+        .ring {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(
+                #3aafa9 var(--percent, 0%),
+                #eee var(--percent, 0%)
+            );
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            transition: transform 0.5s ease-in-out, box-shadow 0.3s ease;
+        }
+
+        .ring.extra-expense {
+            background: conic-gradient(
+                red var(--extra-percent, 0%),
+                #eee var(--extra-percent, 0%)
+            );
+        }
+
+        .ring.profile {
+            background: #eee;
+            animation: rotate 5s linear infinite;
+        }
+
+        .ring.profile::before {
+            content: '';
+            width: 90%;
+            height: 90%;
+            background: url('https://via.placeholder.com/100') no-repeat center/cover;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .ring:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(58, 175, 169, 0.6);
+        }
+
+        .ring-text {
+            position: absolute;
+            font-size: 1rem;
+            color: white;
+        }
+
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .ring {
+                width: 120px;
+                height: 120px;
+            }
+
+            .ring-text {
+                font-size: 0.8rem;
+            }
+
+            .rings-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Expense Tracker</h1>
+    <div class="expense-tracker">
+        <div class="rings-container">
+            
+            <div class="ring profile"></div>
+
+           
+            <div class="ring" style="--percent: 0%;">
+                <div class="ring-text" id="budgetRingText">0%</div>
+            </div>
+
+            
+            <div class="ring extra-expense" style="--extra-percent: 0%;">
+                <div class="ring-text" id="extraRingText">0%</div>
+            </div>
+        </div>
+        <input type="number" id="budgetInput" placeholder="Enter your budget (INR)">
+        <input type="text" id="expenseTitle" placeholder="Expense Title">
+        <input type="number" id="expenseAmount" placeholder="Expense Amount (INR)">
+        <button onclick="addExpense()">Add Expense</button>
+        <div class="expenses">
+            <ul id="expenseList"></ul>
+        </div>
+    </div>
+
+    <script>
+        let budget = 0;
+        let totalExpenses = 0;
+
+        function updateRings() {
+            const budgetPercent = Math.min((totalExpenses / budget) * 100, 100);
+            const extraPercent = totalExpenses > budget
+                ? Math.min(((totalExpenses - budget) / budget) * 100, 100)
+                : 0;
+
+           
+            const budgetRing = document.querySelector(".ring:not(.extra-expense)");
+            const extraRing = document.querySelector(".ring.extra-expense");
+
+            budgetRing.style.setProperty("--percent", `${budgetPercent}%`);
+            extraRing.style.setProperty("--extra-percent", `${extraPercent}%`);
+
+           
+            const budgetRingText = document.getElementById("budgetRingText");
+            const extraRingText = document.getElementById("extraRingText");
+
+            budgetRingText.textContent = `${Math.round(100 - budgetPercent)}% left`;
+
+            if (totalExpenses > budget) {
+                extraRingText.textContent = `-${Math.round(extraPercent)}% extra`;
+            } else {
+                extraRingText.textContent = `0% extra`;
+            }
+        }
+
+        function addExpense() {
+            const budgetInput = document.getElementById("budgetInput").value;
+            const expenseTitle = document.getElementById("expenseTitle").value;
+            const expenseAmount = document.getElementById("expenseAmount").value;
+
+            if (!budget && budgetInput) {
+                budget = parseFloat(budgetInput);
+                document.getElementById("budgetInput").disabled = true;
+            }
+
+            if (!expenseTitle || !expenseAmount) {
+                alert("Please enter all fields!");
+                return;
+            }
+
+            totalExpenses += parseFloat(expenseAmount);
+
+      
+            const expenseList = document.getElementById("expenseList");
+            const li = document.createElement("li");
+            li.textContent = `${expenseTitle}: ₹${expenseAmount}`;
+            expenseList.appendChild(li);
+
+            updateRings();
+
+            document.getElementById("expenseTitle").value = "";
+            document.getElementById("expenseAmount").value = "";
+        }
+    </script>
+</body>
+</html>
